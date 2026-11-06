@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>4. Lecke: Adatok betöltése JS fájlból</title>
+    <style>
+        body { font-family: sans-serif; margin: 30px; background-color: #f9f9f9; color: #333; }
+        h1 { color: #2c3e50; }
+        input { padding: 10px; width: 300px; font-size: 16px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #27ae60; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+
+    <h1>4. Lecke: Adatok betöltése külön fájlból (Javítva!)</h1>
+    <p>Így már a Safari is zökkenőmentesen betölti:</p>
+
+    <!-- Keresőmező -->
+    <input type="text" id="kereso" placeholder="Keresés..." onkeyup="szures()">
+
+    <table id="zeneTabla">
+        <thead>
+            <tr>
+                <th>Zenemű Címe</th>
+                <th>Zeneszerző</th>
+                <th>Dalszövegíró</th>
+            </tr>
+        </thead>
+        <tbody id="tablaTorzs">
+            <!-- Ide varázsolja be a JavaScript az adatokat -->
+        </tbody>
+    </table>
+
+    <!-- Betöltjük a különálló adat fájlunkat -->
+    <script src="adat.js"></script>
+
+    <script>
+        // Amint betöltődött az oldal, azonnal feltöltjük a táblázatot
+        window.onload = function() {
+            tablaFeltoltes(zeneiAdatok);
+        };
+
+        function tablaFeltoltes(adatLista) {
+            const tbody = document.getElementById('tablaTorzs');
+            tbody.innerHTML = ""; 
+
+            // ITT VOLT A HIBA: javítva adatLista.forEach-re
+            adatLista.forEach(zenemu => {
+                let sor = `<tr>
+                    <td>${zenemu.cim}</td>
+                    <td>${zenemu.zeneszerzo}</td>
+                    <td>${zenemu.szovegiro}</td>
+                </tr>`;
+                tbody.innerHTML += sor;
+            });
+        }
+
+        function szures() {
+            var input, filter, table, tr, td, i, j, txtValue;
+            input = document.getElementById("kereso");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("zeneTabla");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) {
+                tr[i].style.display = "none";
+                td = tr[i].getElementsByTagName("td");
+                for (j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
