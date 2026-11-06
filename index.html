@@ -2,25 +2,64 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>4. Lecke: Adatok betöltése JS fájlból</title>
+    <title>Zenei Adatbázis & Szeletelők</title>
     <style>
         body { font-family: sans-serif; margin: 30px; background-color: #f9f9f9; color: #333; }
         h1 { color: #2c3e50; }
-        input { padding: 10px; width: 300px; font-size: 16px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* A szűrők doboza */
+        .szurok-kontener {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .szuro-doboz {
+            display: flex;
+            flex-direction: column;
+        }
+        .szuro-doboz label {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input { 
+            padding: 10px; 
+            width: 220px; 
+            font-size: 15px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        }
+
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #27ae60; color: white; }
+        th { background-color: #2980b9; color: white; }
         tr:hover { background-color: #f1f1f1; }
     </style>
 </head>
 <body>
 
-    <h1>4. Lecke: Adatok betöltése külön fájlból (Javítva!)</h1>
-    <p>Így már a Safari is zökkenőmentesen betölti:</p>
+    <h1>Zenei Kapcsolati Háló & Adatbázis</h1>
+    <p>Használd az alábbi szűrőket (szeletelőket) a kereséshez:</p>
 
-    <!-- Keresőmező -->
-    <input type="text" id="kereso" placeholder="Keresés..." onkeyup="szures()">
+    <!-- Szeletelők / Szűrők mezői -->
+    <div class="szurok-kontener">
+        <div class="szuro-doboz">
+            <label for="szuresCim">Szűrés Címre:</label>
+            <input type="text" id="szuresCim" placeholder="Pl. Zenemű..." onkeyup="adatokatSzuroEsKirajzol()">
+        </div>
+        <div class="szuro-doboz">
+            <label for="szuresZeneszerzo">Szűrés Zeneszerzőre:</label>
+            <input type="text" id="szuresZeneszerzo" placeholder="Pl. Én (AI)..." onkeyup="adatokatSzuroEsKirajzol()">
+        </div>
+        <div class="szuro-doboz">
+            <label for="szuresSzovegiro">Szűrés Szövegíróra:</label>
+            <input type="text" id="szuresSzovegiro" placeholder="Pl. Vica..." onkeyup="adatokatSzuroEsKirajzol()">
+        </div>
+    </div>
 
+    <!-- Táblázat -->
     <table id="zeneTabla">
         <thead>
             <tr>
@@ -30,24 +69,29 @@
             </tr>
         </thead>
         <tbody id="tablaTorzs">
-            <!-- Ide varázsolja be a JavaScript az adatokat -->
+            <!-- Ide teszi be a JavaScript a szűrt adatokat -->
         </tbody>
     </table>
 
-    <!-- Betöltjük a különálló adat fájlunkat -->
+    <!-- Betöltjük az adatokat -->
     <script src="adat.js"></script>
 
     <script>
-        // Amint betöltődött az oldal, azonnal feltöltjük a táblázatot
+        // Amint betöltődik az oldal, megjelenítjük az összes adatot
         window.onload = function() {
             tablaFeltoltes(zeneiAdatok);
         };
 
+        // Táblázat feltöltő függvény
         function tablaFeltoltes(adatLista) {
             const tbody = document.getElementById('tablaTorzs');
             tbody.innerHTML = ""; 
 
-            // ITT VOLT A HIBA: javítva adatLista.forEach-re
+            if (adatLista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #888;">Nincs találat a megadott szűrésre.</td></tr>`;
+                return;
+            }
+
             adatLista.forEach(zenemu => {
                 let sor = `<tr>
                     <td>${zenemu.cim}</td>
@@ -58,26 +102,24 @@
             });
         }
 
-        function szures() {
-            var input, filter, table, tr, td, i, j, txtValue;
-            input = document.getElementById("kereso");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("zeneTabla");
-            tr = table.getElementsByTagName("tr");
+        // A szűrő / szeletelő logika
+        function adatokatSzuroEsKirajzol() {
+            // Kiolvassuk a 3 mező értékét, és kisbetűssé alakítjuk (hogy a kis- és nagybetű ne számítson)
+            let cimFilt = document.getElementById("szuresCim").value.toLowerCase();
+            let zeneFilt = document.getElementById("szuresZeneszerzo").value.toLowerCase();
+            let szovegFilt = document.getElementById("szuresSzovegiro").value.toLowerCase();
 
-            for (i = 1; i < tr.length; i++) {
-                tr[i].style.display = "none";
-                td = tr[i].getElementsByTagName("td");
-                for (j = 0; j < td.length; j++) {
-                    if (td[j]) {
-                        txtValue = td[j].textContent || td[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            tr[i].style.display = "";
-                            break;
-                        }
-                    }
-                }
-            }
+            // Szűrjük a tömböt: csak azok maradhatnak, amelyek mindhárom mezőre illeszkednek
+            let szurtAdatok = zeneiAdatok.filter(item => {
+                let matchCim = item.cim.toLowerCase().includes(cimFilt);
+                let matchZene = item.zeneszerzo.toLowerCase().includes(zeneFilt);
+                let matchSzoveg = item.szovegiro.toLowerCase().includes(szovegFilt);
+                
+                return matchCim && matchZene && matchSzoveg;
+            });
+
+            // Újrarajzoljuk a táblázatot a szűrt listával
+            tablaFeltoltes(szurtAdatok);
         }
     </script>
 
