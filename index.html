@@ -2,34 +2,51 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Zenei Adatbázis & Szeletelők</title>
+    <title>Zenei Adatbázis - Kereső és Szeletelők</title>
     <style>
         body { font-family: sans-serif; margin: 30px; background-color: #f9f9f9; color: #333; }
         h1 { color: #2c3e50; }
         
-        /* A szűrők doboza */
-        .szurok-kontener {
+        /* A vezérlőpult doboza */
+        .vezerlo-panel {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .fo-kereso {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .szeletelok-sor {
             display: flex;
             gap: 15px;
-            margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        .szuro-doboz {
+        .szeletelo-doboz {
             display: flex;
             flex-direction: column;
+            flex: 1;
+            min-width: 200px;
         }
-        .szuro-doboz label {
-            font-size: 14px;
+        .szeletelo-doboz label {
+            font-size: 13px;
             font-weight: bold;
             margin-bottom: 5px;
             color: #555;
         }
-        input { 
-            padding: 10px; 
-            width: 220px; 
-            font-size: 15px; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
+        select {
+            padding: 10px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
         }
 
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -40,22 +57,28 @@
 </head>
 <body>
 
-    <h1>Zenei Kapcsolati Háló & Adatbázis</h1>
-    <p>Használd az alábbi szűrőket (szeletelőket) a kereséshez:</p>
+    <h1>Zenei Adatbázis & Szeletelők</h1>
+    <p>Használd a szabad keresőt vagy kattints a szeletelőkre a szűréshez:</p>
 
-    <!-- Szeletelők / Szűrők mezői -->
-    <div class="szurok-kontener">
-        <div class="szuro-doboz">
-            <label for="szuresCim">Szűrés Címre:</label>
-            <input type="text" id="szuresCim" placeholder="Pl. Zenemű..." onkeyup="adatokatSzuroEsKirajzol()">
-        </div>
-        <div class="szuro-doboz">
-            <label for="szuresZeneszerzo">Szűrés Zeneszerzőre:</label>
-            <input type="text" id="szuresZeneszerzo" placeholder="Pl. Én (AI)..." onkeyup="adatokatSzuroEsKirajzol()">
-        </div>
-        <div class="szuro-doboz">
-            <label for="szuresSzovegiro">Szűrés Szövegíróra:</label>
-            <input type="text" id="szuresSzovegiro" placeholder="Pl. Vica..." onkeyup="adatokatSzuroEsKirajzol()">
+    <!-- Vezérlőpanel: Fő kereső + Szeletelők -->
+    <div class="vezerlo-panel">
+        <!-- Google-szerű fő keresőmező -->
+        <input type="text" id="foKereso" class="fo-kereso" placeholder="🔍 Szabad keresés (cím, zeneszerző, szövegíró)..." onkeyup="szuresEsKirajzol()">
+
+        <!-- Szeletelők (Lenyíló dobozok) -->
+        <div class="szeletelok-sor">
+            <div class="szeletelo-doboz">
+                <label for="szSzerzo">Zeneszerző szeletelő:</label>
+                <select id="szSzerzo" onchange="szuresEsKirajzol()">
+                    <option value="">-- Összes zeneszerző --</option>
+                </select>
+            </div>
+            <div class="szeletelo-doboz">
+                <label for="szSzovegiro">Szövegíró szeletelő:</label>
+                <select id="szSzovegiro" onchange="szuresEsKirajzol()">
+                    <option value="">-- Összes szövegíró --</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -69,7 +92,7 @@
             </tr>
         </thead>
         <tbody id="tablaTorzs">
-            <!-- Ide teszi be a JavaScript a szűrt adatokat -->
+            <!-- Ide kerülnek a szűrt adatok -->
         </tbody>
     </table>
 
@@ -77,12 +100,29 @@
     <script src="adat.js"></script>
 
     <script>
-        // Amint betöltődik az oldal, megjelenítjük az összes adatot
+        // Amint betöltődik az oldal
         window.onload = function() {
+            szuroketFeltolt();
             tablaFeltoltes(zeneiAdatok);
         };
 
-        // Táblázat feltöltő függvény
+        // Automatikusan feltölti a szeletelőket (lenyíló listákat) az adatok alapján, hogy ne kelljen kézzel írogatni
+        function szuroketFeltolt() {
+            let szerzok = [...new Set(zeneiAdatok.map(item => item.zeneszerzo))];
+            let szovegirok = [...new Set(zeneiAdatok.map(item => item.szovegiro))];
+
+            let szerzoSelect = document.getElementById("szSzerzo");
+            szerzok.forEach(szerzo => {
+                szerzoSelect.innerHTML += `<option value="${szerzo}">${szerzo}</option>`;
+            });
+
+            let szovegiroSelect = document.getElementById("szSzovegiro");
+            szovegirok.forEach(szovegiro => {
+                szovegiroSelect.innerHTML += `<option value="${szovegiro}">${szovegiro}</option>`;
+            });
+        }
+
+        // Táblázat kirajzolása
         function tablaFeltoltes(adatLista) {
             const tbody = document.getElementById('tablaTorzs');
             tbody.innerHTML = ""; 
@@ -102,23 +142,29 @@
             });
         }
 
-        // A szűrő / szeletelő logika
-        function adatokatSzuroEsKirajzol() {
-            // Kiolvassuk a 3 mező értékét, és kisbetűssé alakítjuk (hogy a kis- és nagybetű ne számítson)
-            let cimFilt = document.getElementById("szuresCim").value.toLowerCase();
-            let zeneFilt = document.getElementById("szuresZeneszerzo").value.toLowerCase();
-            let szovegFilt = document.getElementById("szuresSzovegiro").value.toLowerCase();
+        // A közös szűrő motor (Fő kereső + Szeletelők együtt)
+        function szuresEsKirajzol() {
+            let keresettSzo = document.getElementById("foKereso").value.toLowerCase();
+            let kivalasztottSzerzo = document.getElementById("szSzerzo").value;
+            let kivalasztottSzovegiro = document.getElementById("szSzovegiro").value;
 
-            // Szűrjük a tömböt: csak azok maradhatnak, amelyek mindhárom mezőre illeszkednek
             let szurtAdatok = zeneiAdatok.filter(item => {
-                let matchCim = item.cim.toLowerCase().includes(cimFilt);
-                let matchZene = item.zeneszerzo.toLowerCase().includes(zeneFilt);
-                let matchSzoveg = item.szovegiro.toLowerCase().includes(szovegFilt);
-                
-                return matchCim && matchZene && matchSzoveg;
+                // 1. Feltétel: Illeszkedik a szabad keresőre (bármelyik mezőben benne van)
+                let egyezikKereso = 
+                    item.cim.toLowerCase().includes(keresettSzo) ||
+                    item.zeneszerzo.toLowerCase().includes(keresettSzo) ||
+                    item.szovegiro.toLowerCase().includes(keresettSzo);
+
+                // 2. Feltétel: Megfelel a zeneszerző szeletelőnek (ha ki van választva valaki)
+                let egyezikSzerzo = (kivalasztottSzerzo === "") || (item.zeneszerzo === kivalasztottSzerzo);
+
+                // 3. Feltétel: Megfelel a szövegíró szeletelőnek (ha ki van választva valaki)
+                let egyezikSzovegiro = (kivalasztottSzovegiro === "") || (item.szovegiro === kivalasztottSzovegiro);
+
+                // Mindhárom feltételnek teljesülnie kell egyszerre
+                return egyezikKereso && egyezikSzerzo && egyezikSzovegiro;
             });
 
-            // Újrarajzoljuk a táblázatot a szűrt listával
             tablaFeltoltes(szurtAdatok);
         }
     </script>
